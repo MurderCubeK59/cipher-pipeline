@@ -5,6 +5,8 @@
 <title>Cipher Pipeline Encoder</title>
 <link rel="icon" type="image/png" href="assets/icon.png">
 
+const API_URL = "cipher-pipeline-worker.alongenius2323.workers.dev";
+let SESSION_TOKEN = null;
 
 <style>
 body{
@@ -35,6 +37,11 @@ button{
 
 <body>
 
+<input type="password" id="pass" placeholder="Server password">
+<button onclick="login()">Login</button>
+
+<div id="status"></div>
+
 <h2>Cipher Pipeline Encoder (Made by K59 Kale)</h2>
 
 <textarea id="input" placeholder="Enter text..."></textarea>
@@ -62,6 +69,42 @@ function reverse(str){
     return str.split("").reverse().join("");
 }
 
+
+async function login(){
+
+    const password = document.getElementById("pass").value;
+
+    const res = await fetch(API_URL + "/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password })
+    });
+
+    const data = await res.json();
+
+    if(!data.success){
+        document.getElementById("status").innerText = "ACCESS DENIED ❌";
+        return;
+    }
+
+    SESSION_TOKEN = data.token;
+    document.getElementById("status").innerText = "ACCESS GRANTED ✔";
+}
+
+async function verify(){
+
+    if(!SESSION_TOKEN) return false;
+
+    const res = await fetch(API_URL + "/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: SESSION_TOKEN })
+    });
+
+    const data = await res.json();
+
+    return data.success;
+}
 //--------------------------------------------------
 
 function atbash(str){
@@ -162,60 +205,52 @@ function replaceAlphabet(str,from,to){
 
 //--------------------------------------------------
 
-function encode(){
+async function encode(){
+
+    if(!await verify()){
+        document.getElementById("output").value = "NOT AUTHORIZED ❌";
+        return;
+    }
 
     let text=document.getElementById("input").value;
 
     text=reverse(text);
-
     text=atbash(text);
-
     text=caesar(text,7);
-
     text=swapPairs(text);
-
     text=btoa(unescape(encodeURIComponent(text)));
-
     text=replaceAlphabet(text,normal,custom);
-
     text=reverse(text);
 
     document.getElementById("output").value=text;
-
 }
 
 //--------------------------------------------------
 
-function decode(){
+async function decode(){
+
+    if(!await verify()){
+        document.getElementById("output").value = "NOT AUTHORIZED ❌";
+        return;
+    }
 
     try{
 
         let text=document.getElementById("input").value;
 
         text=reverse(text);
-
         text=replaceAlphabet(text,custom,normal);
-
         text=decodeURIComponent(escape(atob(text)));
-
         text=swapPairs(text);
-
         text=caesar(text,-7);
-
         text=atbash(text);
-
         text=reverse(text);
 
         document.getElementById("output").value=text;
 
-    }
-
-    catch(e){
-
+    }catch(e){
         document.getElementById("output").value="Invalid encoded text.";
-
     }
-
 }
 
 </script>
