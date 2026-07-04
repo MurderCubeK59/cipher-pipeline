@@ -5,9 +5,6 @@
 <title>Cipher Pipeline Encoder</title>
 <link rel="icon" type="image/png" href="assets/icon.png">
 
-const API_URL = "cipher-pipeline-worker.alongenius2323.workers.dev";
-let SESSION_TOKEN = null;
-
 <style>
 body{
     background:#111;
@@ -55,21 +52,11 @@ button{
 
 <script>
 
-// Original Base64 alphabet
-const normal =
-"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+/* ✅ SERVER CONFIG (FIXED) */
+const API_URL = "https://cipher-pipeline-worker.alongenius2323.workers.dev";
+let SESSION_TOKEN = null;
 
-// Custom alphabet (64 unique characters)
-const custom =
-"Q8AqVN9xKeD3L2sPmRu7TcWy1FgHjUkXbYo0lGiIhBnOpC4dES6vJZf5rMtaz+/";
-
-//--------------------------------------------------
-
-function reverse(str){
-    return str.split("").reverse().join("");
-}
-
-
+/* ---------------- LOGIN ---------------- */
 async function login(){
 
     const password = document.getElementById("pass").value;
@@ -91,6 +78,7 @@ async function login(){
     document.getElementById("status").innerText = "ACCESS GRANTED ✔";
 }
 
+/* ---------------- VERIFY ---------------- */
 async function verify(){
 
     if(!SESSION_TOKEN) return false;
@@ -102,109 +90,69 @@ async function verify(){
     });
 
     const data = await res.json();
-
     return data.success;
 }
-//--------------------------------------------------
+
+/* ---------------- CIPHER ---------------- */
+
+const normal =
+"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+const custom =
+"Q8AqVN9xKeD3L2sPmRu7TcWy1FgHjUkXbYo0lGiIhBnOpC4dES6vJZf5rMtaz+/";
+
+function reverse(str){
+    return str.split("").reverse().join("");
+}
 
 function atbash(str){
-
     let out="";
-
     for(let c of str){
-
         if(c>='A'&&c<='Z'){
             out+=String.fromCharCode(90-(c.charCodeAt(0)-65));
-        }
-
-        else if(c>='a'&&c<='z'){
+        } else if(c>='a'&&c<='z'){
             out+=String.fromCharCode(122-(c.charCodeAt(0)-97));
-        }
-
-        else{
+        } else {
             out+=c;
         }
-
     }
-
     return out;
 }
-
-//--------------------------------------------------
 
 function caesar(str,shift){
-
     let out="";
-
     for(let c of str){
-
         if(c>='A'&&c<='Z'){
-
             let x=(c.charCodeAt(0)-65+shift+26)%26;
             out+=String.fromCharCode(x+65);
-
-        }
-
-        else if(c>='a'&&c<='z'){
-
+        } else if(c>='a'&&c<='z'){
             let x=(c.charCodeAt(0)-97+shift+26)%26;
             out+=String.fromCharCode(x+97);
-
-        }
-
-        else{
-
+        } else {
             out+=c;
-
         }
-
     }
-
     return out;
-
 }
-
-//--------------------------------------------------
 
 function swapPairs(str){
-
     let arr=str.split("");
-
     for(let i=0;i<arr.length-1;i+=2){
-
-        let t=arr[i];
-        arr[i]=arr[i+1];
-        arr[i+1]=t;
-
+        [arr[i],arr[i+1]]=[arr[i+1],arr[i]];
     }
-
     return arr.join("");
-
 }
-
-//--------------------------------------------------
 
 function replaceAlphabet(str,from,to){
-
     let out="";
-
     for(let c of str){
-
         let i=from.indexOf(c);
-
-        if(i==-1)
-            out+=c;
-        else
-            out+=to[i];
-
+        out += (i === -1 ? c : to[i]);
     }
-
     return out;
-
 }
 
-//--------------------------------------------------
-
+/* ---------------- ENCODE ---------------- */
 async function encode(){
 
     if(!await verify()){
@@ -225,8 +173,7 @@ async function encode(){
     document.getElementById("output").value=text;
 }
 
-//--------------------------------------------------
-
+/* ---------------- DECODE ---------------- */
 async function decode(){
 
     if(!await verify()){
