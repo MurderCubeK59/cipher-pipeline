@@ -1,34 +1,87 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>Cipher Pipeline Encoder</title>
-<link rel="icon" href="assets/icon.png">
-<link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <title>Cipher Pipeline</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        textarea { width: 100%; height: 150px; margin: 10px 0; font-family: monospace; }
+        button { padding: 10px 20px; margin: 5px; }
+        #status { font-weight: bold; margin: 10px 0; }
+    </style>
 </head>
-
 <body>
+    <h2>Cipher Pipeline</h2>
+    
+    <div id="login-screen">
+        <input type="password" id="pass" placeholder="Enter password">
+        <button onclick="login()">Login</button>
+        <div id="status"></div>
+    </div>
 
-<h2>Cipher Pipeline Encoder</h2>
+    <div id="app" style="display: none;">
+        <textarea id="input" placeholder="Enter text..."></textarea><br>
+        <button onclick="encode()">Encode</button>
+        <button onclick="decode()">Decode</button>
+        <h3>Result:</h3>
+        <textarea id="output" readonly></textarea>
+    </div>
 
-<input type="password" id="pass" placeholder="Server password">
-<button onclick="login()">Login</button>
-<div id="status"></div>
+    <script>
+        let SESSION_TOKEN = null;
+        const API_URL = "https://cipher-pipeline-worker.alongenius2323.workers.dev"; // ← CHANGE THIS LINE
 
-<hr>
+        async function login() {
+            const password = document.getElementById("pass").value;
+            const status = document.getElementById("status");
 
-<textarea id="input" placeholder="Enter text..."></textarea>
+            try {
+                const res = await fetch(API_URL + "/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ password })
+                });
 
-<br>
+                const data = await res.json();
 
-<button onclick="encode()">Encode</button>
-<button onclick="decode()">Decode</button>
+                if (data.success) {
+                    SESSION_TOKEN = data.token;
+                    status.innerHTML = "✅ Access Granted";
+                    status.style.color = "green";
+                    document.getElementById("login-screen").style.display = "none";
+                    document.getElementById("app").style.display = "block";
+                } else {
+                    status.innerHTML = "❌ Wrong password";
+                    status.style.color = "red";
+                }
+            } catch(e) {
+                status.innerHTML = "❌ Connection error";
+            }
+        }
 
-<h3>Output</h3>
-<textarea id="output"></textarea>
+        async function callApi(endpoint, text) {
+            if (!SESSION_TOKEN) return "Not logged in";
 
-<script src="config.js"></script>
-<script src="script.js"></script>
+            const res = await fetch(API_URL + endpoint, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ token: SESSION_TOKEN, text })
+            });
 
+            const data = await res.json();
+            return data.result || data.error || "Error";
+        }
+
+        async function encode() {
+            const input = document.getElementById("input").value;
+            document.getElementById("output").value = await callApi("/encode", input);
+        }
+
+        async function decode() {
+            const input = document.getElementById("input").value;
+            document.getElementById("output").value = await callApi("/decode", input);
+        }
+    </script>
 </body>
 </html>
