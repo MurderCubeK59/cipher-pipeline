@@ -29,7 +29,7 @@
     </div>
 
     <script>
-        let SESSION_TOKEN = null;
+        let SESSION_TOKEN = localStorage.getItem("token") || "";
         const API_URL = "https://cipher-pipeline-worker.alongenius2323.workers.dev"; // ← CHANGE THIS LINE
 
         async function login() {
@@ -47,6 +47,7 @@
 
                 if (data.success) {
                     SESSION_TOKEN = data.token;
+                    localStorage.setItem("token", SESSION_TOKEN);
                     status.innerHTML = "✅ Access Granted";
                     status.style.color = "green";
                     document.getElementById("login-screen").style.display = "none";
